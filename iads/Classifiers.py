@@ -308,5 +308,48 @@ class ClassifierMultiOAA(Classifier):
         scores = self.score(x)
         return self.classes[np.argmax(scores)]
         
+#########################################################################
+
+def classe_majoritaire(Y):
+    """ Y : (array) : array de labels
+        rend la classe majoritaire ()
+    """
+    val,count = np.unique(Y, return_counts = True)
+    arg = np.argmax(count)
+    return val[arg]
 
 
+#########################################################################
+
+def entropie(Y):
+    """ Y : (array) : ensemble de labels de classe
+        rend l'entropie de l'ensemble Y
+    """
+    len_y = len(Y)
+    liste_len_label = []
+    df = pd.DataFrame({'label' : Y})
+    groupe = df.groupby('label')
+    res = [g['label'].tolist() for _, g in groupe]
+
+    for e in res:
+        liste_len_label.append(len(e))
+    return shannon([i / len_y for i in liste_len_label])
+            
+
+########################################################################
+
+def shannon(P):
+    """ list[Number] -> float
+        Hypothèse: P est une distribution de probabilités
+        - P: distribution de probabilités
+        rend la valeur de l'entropie de Shannon correspondante
+    """
+
+    if len(P) > 1:
+        log_k = np.log(len(P))
+    else:
+        log_k = 1
+
+    return -(sum(p*np.log(p)/log_k for p in P if p > 0))
+    
+    
