@@ -26,9 +26,6 @@ def genere_dataset_uniform(d, nc, binf=-1, bsup=1):
     """
     data = np.random.uniform(binf,bsup,(2*nc,d))
     etiquettes = np.array([-1 for i in range(0,nc)] + [+1 for i in range(0,nc)])
-
-    print("Type de data: ",type(data))
-    print("Type de etiquettes: ",type(etiquettes))
     
     return (data,etiquettes)
 
@@ -38,14 +35,10 @@ def genere_dataset_gaussian(positive_center, positive_sigma, negative_center, ne
     """ les valeurs générées suivent une loi normale
         rend un tuple (data_desc, data_labels)
     """
-    e1 = np.random.multivariate_normal(negative_center,negative_sigma,nc)
-    e2 = np.random.multivariate_normal(positive_center,positive_sigma,nc)
-
-    e3 = np.vstack((e1,e2))
-
-    eti = np.array([-1 for i in range(0,nc)] + [+1 for i in range(0,nc)])
-
-    return (e3,eti)
+    x = np.random.multivariate_normal(negative_center,negative_sigma,nc)
+    y = np.random.multivariate_normal(positive_center,positive_sigma,nc)
+    label = np.array([-1 for i in range(0,nc)] + [+1 for i in range(0,nc)])
+    return (np.concatenate((x,y), axis=0),label)
 
 #######################################################################################
 
@@ -55,22 +48,16 @@ def plot2DSet(desc,labels,nom_dataset= "Dataset", avec_grid=False):
         avec_grid (bool) : True si on veut afficher la grille
         la fonction doit utiliser la couleur 'red' pour la classe -1 et 'blue' pour la +1
     """
-    
     data_negatifs = desc[labels == -1]
     data_positifs = desc[labels == +1]
-
     plt.scatter(data_negatifs[:,0],data_negatifs[:,1],marker='o', color="red", label='classe -1') # 'o' rouge pour la classe -1
     plt.scatter(data_positifs[:,0],data_positifs[:,1],marker='x', color="blue", label='classe +1') # 'x' bleu pour la classe +1
-
-
     plt.title(nom_dataset)
     plt.xlabel("x1")
     plt.ylabel("x2")
     plt.legend()
-
     if avec_grid:
         plt.grid()
-
     plt.show()
 
 #######################################################################################

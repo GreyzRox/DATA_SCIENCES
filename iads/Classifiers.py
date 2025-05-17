@@ -12,12 +12,16 @@ Année: LU3IN026 - semestre 2 - 2024-2025, Sorbonne Université
 # Import de packages externes
 import numpy as np
 import pandas as pd
-import copy 
+from iads import utils as ut
+import copy
+import graphviz as gv
+
+from abc import ABC, abstractmethod
 
 
 # ---------------------------
 
-class Classifier:
+class Classifier(ABC):
     """ Classe (abstraite) pour représenter un classifieur
         Attention: cette classe est ne doit pas être instanciée.
     """
@@ -30,20 +34,23 @@ class Classifier:
         """
         self.dimension = input_dimension
         
+    @abstractmethod
     def train(self, desc_set, label_set):
         """ Permet d'entrainer le modele sur l'ensemble donné
             desc_set: ndarray avec des descriptions
             label_set: ndarray avec les labels correspondants
             Hypothèse: desc_set et label_set ont le même nombre de lignes
-        """
+        """        
         pass
-    
+
+    @abstractmethod
     def score(self,x):
         """ rend le score de prédiction sur x (valeur réelle)
             x: une description
         """
         pass
-    
+
+    @abstractmethod
     def predict(self, x):
         """ rend la prediction sur x (soit -1 ou soit +1)
             x: une description
@@ -61,33 +68,55 @@ class Classifier:
         for desc,label in zip(desc_set,label_set):
             if (self.predict(desc) == label):
                 compteur += 1
-        return compteur/len(label_set)
+        return compteur/len(desc_set)
 
 #######################################################################################
 
 class ClassifierKNN(Classifier):
+    """ Classe pour représenter un classifieur par K plus proches voisins.
+        Cette classe hérite de la classe Classifier
+    """
+    
     def __init__(self, input_dimension, k):
-        super().__init__(input_dimension)
+        """ Constructeur de Classifier
+            Argument:
+                - intput_dimension (int) : dimension d'entrée des exemples
+                - k (int) : nombre de voisins à considérer
+            Hypothèse : input_dimension > 0
+        """
+        Classifier.__init__(self,input_dimension)
         self.k = k
-        self.desc = None
+        self.data = None
         self.label = None
 
     def train(self, desc_set, label_set):
-        self.desc = desc_set
+        """ Permet d'entrainer le modele sur l'ensemble donné
+            desc_set: ndarray avec des descriptions
+            label_set: ndarray avec les labels correspondants
+            Hypothèse: desc_set et label_set ont le même nombre de lignes
+        """        
+        self.data = desc_set
         self.label = label_set
-
-    def score(self, x):
-        if self.desc is None or self.label is None:
-            raise ValueError("Classifieur non entraîné")
+  
+    def score(self,x):
+        """ rend la proportion de +1 parmi les k ppv de x (valeur réelle)
+            x: une description : un ndarray
+        """
+        desc_copy = np.linalg.norm(self.data - x, axis = 1)
+        sort = np.argsort(desc_copy)
+        klabel = self.label[sort[:self.k]]
+        p = (klabel==1).sum()/self.k
+        return 2*(p-0.5)
         
-        distances = np.linalg.norm(self.desc - x, axis=1)
-        indices = np.argsort(distances)[:self.k]
-        k_labels = self.label[indices]
-        return np.sum(k_labels == 1) / self.k
-
     def predict(self, x):
-        return 1 if self.score(x) >= 0.5 else -1
-
+        """ rend la prediction sur x (-1 ou +1)
+            x: une description : un ndarray
+        """
+        score = self.score(x)
+        if score > 0 :
+            return 1
+        else :
+            return -1
 
 #######################################################################################
 
@@ -107,7 +136,6 @@ class ClassifierLineaireRandom(Classifier):
         self.v=np.random.uniform(-1,1,input_dimension)
         self.w=self.v/np.linalg.norm(self.v)
         
-    
     def train(self, desc_set, label_set):
         """ Permet d'entrainer le modele sur l'ensemble donné
             desc_set: ndarray avec des descriptions
@@ -120,12 +148,14 @@ class ClassifierLineaireRandom(Classifier):
         """ rend le score de prédiction sur x (valeur réelle)
             x: une description
         """
-        return np.dot(x,self.w)    
+        return np.dot(x,self.w)
+
     def predict(self, x):
         """ rend la prediction sur x (soit -1 ou soit +1)
             x: une description
         """
         score=self.score(x)
+        return 1 if score>=0 else -1
         return 1 if score>=0 else -1
 
 #######################################################################################
@@ -150,8 +180,7 @@ class ClassifierPerceptron(Classifier):
         else:
             v = np.random.uniform(0,1,self.dimension)
             self.w = (2*v-1)*0.001
-        self.allw =[self.w.copy()] # stockage des premiers poids
-
+        
     def train_step(self, desc_set, label_set):
         """ Réalise une unique itération sur tous les exemples du dataset
             donné en prenant les exemples aléatoirement.
@@ -172,11 +201,9 @@ class ClassifierPerceptron(Classifier):
             yi_sign = np.sign(yi_dot)  # Prédiction
             if yi_sign != yi:
                 self.w += self.lrate * yi * xi
-                self.allw.append(self.w.copy())
             
         return np.linalg.norm(self.w-precedent_w)
         
-     
     def train(self, desc_set, label_set, nb_max=100, seuil=0.001):
         """ Apprentissage itératif du perceptron sur le dataset donné.
             Arguments:
