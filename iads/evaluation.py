@@ -22,7 +22,6 @@ def crossval(X, Y, n_iterations, iteration):
     Xapp = np.concatenate((X[:start],X[end:]))
     Yapp = np.concatenate((Y[:start],Y[end:]))
 
-    return Xapp, Yapp, Xtest, Ytest  
     return Xapp, Yapp, Xtest, Ytest
 
 ##############################################################################

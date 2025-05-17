@@ -180,6 +180,7 @@ class ClassifierPerceptron(Classifier):
         else:
             v = np.random.uniform(0,1,self.dimension)
             self.w = (2*v-1)*0.001
+        self.allw =[self.w.copy()] # stockage des premiers poids
         
     def train_step(self, desc_set, label_set):
         """ Réalise une unique itération sur tous les exemples du dataset
@@ -201,6 +202,7 @@ class ClassifierPerceptron(Classifier):
             yi_sign = np.sign(yi_dot)  # Prédiction
             if yi_sign != yi:
                 self.w += self.lrate * yi * xi
+                self.allw.append(self.w.copy())
             
         return np.linalg.norm(self.w-precedent_w)
         
