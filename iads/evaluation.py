@@ -28,9 +28,6 @@ def crossval(X, Y, n_iterations, iteration):
 ##############################################################################
 
 def crossval_strat(X, Y, n_iterations, iteration):
-    #############
-    # A COMPLETER
-    #############
     classe = np.unique(Y) 
     indices_classe = {c: np.where(Y==c)[0] for c in classe}
     test_indices= []
