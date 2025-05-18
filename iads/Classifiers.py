@@ -281,9 +281,8 @@ class ClassifierPerceptronBiais(ClassifierPerceptron):
         precedent_w = self.w.copy()
         
         for xi, yi in zip(shuffle_set, shuffle_label):
-            yi_dot= self.score(xi) # Calcul du score
-            if yi_dot < 1:
-                self.w += self.lrate*(yi - yi_dot)*xi
+            if self.score(xi)*yi < 1:
+                self.w += self.lrate*(yi - self.score(xi))*xi
                 self.allw.append(self.w.copy())
             
         return np.linalg.norm(self.w-precedent_w)
@@ -302,40 +301,42 @@ class ClassifierMultiOAA(Classifier):
                 - cl_bin: classifieur binaire positif/négatif
             Hypothèse : input_dimension > 0
         """
-        self.cl_bin = cl_bin
-        self.classifiers = []        
+        self.classifieur_binaire = cl_bin
+        self.classifieurs = []
+        self.classes = None
+        
         
     def train(self, desc_set, label_set):
+        """ Permet d'entrainer le modele sur l'ensemble donné
+            réalise une itération sur l'ensemble des données prises aléatoirement
+            desc_set: ndarray avec des descriptions
+            label_set: ndarray avec les labels correspondants
+            Hypothèse: desc_set et label_set ont le même nombre de lignes
+        """        
         self.classes = np.unique(label_set)
-        self.classifiers = []
+        nCl = len(self.classes)
 
-        for c in self.classes:
-            # Création d'un classifieur indépendant pour chaque classe
-            clf = copy.deepcopy(self.cl_bin)
+        for i in range(nCl):
+            classif = copy.deepcopy(self.classifieur_binaire)
 
-            # Construction des labels binaires : +1 pour la classe c, -1 sinon
-            bin_labels = np.array([1 if y == c else -1 for y in label_set])
-
-            # Entraînement du classifieur binaire
-            clf.train(desc_set, bin_labels)
-
-            self.classifiers.append(clf)
-
-       
+            ytmp = np.where(label_set == self.classes[i], 1, -1)
+            classif.train(desc_set,ytmp)
+            self.classifieurs.append(classif)
+        
     
-    def score(self, x):
-        scores = []
-        for i, clf in enumerate(self.classifiers):
-            s = clf.score(x)
-            scores.append(s)
-        return scores
+    def score(self,x):
+        """ rend le score de prédiction sur x (valeur réelle)
+            x: une description
+        """
+        return np.array([classifieur.score(x) for classifieur in self.classifieurs])
         
     def predict(self, x):
         """ rend la prediction sur x (soit -1 ou soit +1)
             x: une description
         """
         scores = self.score(x)
-        return self.classes[np.argmax(scores)]
+        classe_predite_index = np.argmax(scores)
+        return self.classes[classe_predite_index]
         
 #########################################################################
 
