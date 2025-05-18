@@ -668,12 +668,12 @@ def construit_AD_num(X,Y,epsilon,LNoms = []):
     # dimensions de X:
     (nb_lig, nb_col) = X.shape
     
-    entropie_classe = classif.entropie(Y)
+    entropie_classe = entropie(Y)
     
     if (entropie_classe <= epsilon) or  (nb_lig <=1):
         # ARRET : on crée une feuille
         noeud = NoeudNumerique(-1,"Label")
-        noeud.ajoute_feuille(classif.classe_majoritaire(Y))
+        noeud.ajoute_feuille(classe_majoritaire(Y))
     else:
         gain_max = 0.0  # meilleur gain trouvé (initalisé à 0.0 => aucun gain)
         i_best = -1     # numéro du meilleur attribut (init à -1 (aucun))
@@ -690,7 +690,7 @@ def construit_AD_num(X,Y,epsilon,LNoms = []):
             
             p_left = len(left_class) / len(Y)
             p_right = len(right_class) / len(Y)
-            new_entropie = p_left * classif.entropie(left_class) + p_right * classif.entropie(right_class)
+            new_entropie = p_left * entropie(left_class) + p_right * entropie(right_class)
             gain = entropie_classe - new_entropie
 
             if gain > gain_max:
@@ -711,13 +711,13 @@ def construit_AD_num(X,Y,epsilon,LNoms = []):
         else: # aucun attribut n'a pu améliorer le gain d'information
               # ARRET : on crée une feuille
             noeud = NoeudNumerique(-1,"Label")
-            noeud.ajoute_feuille(classif.classe_majoritaire(Y))
+            noeud.ajoute_feuille(classe_majoritaire(Y))
         
     return noeud
 
 ###################################################
 
-class ClassifierArbreNumerique(classif.Classifier):
+class ClassifierArbreNumerique(Classifier):
     """ Classe pour représenter un classifieur par arbre de décision numérique
     """
     
