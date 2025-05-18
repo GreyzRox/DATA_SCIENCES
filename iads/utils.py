@@ -186,4 +186,43 @@ def partitionne(m_desc,m_class,n,s):
 
 #######################################################################################
 
+def nettoyage(chaine):
+
+    res = chaine.lower()
+    for car in string.punctuation:
+        if(car != "'" and car in chaine):
+            res=res.replace(car,' ')
+    return res
+
+#######################################################################################
+
+def text2vect(chaine,mots_inutiles):
+    chaine_nettoye = nettoyage(chaine)
+    res = chaine_nettoye.split()
+    return [mot for mot in res if mot not in mots_inutiles]
+
+#######################################################################################
+
+def df2array(df,index_mots):
+    mot_to_index = {mot: i for i, mot in enumerate(index_mots)}
+    res = []
+
+    for mots in df["les_mots"]:
+        v = np.zeros(len(index_mots), dtype = int)
+        for mot in mots:
+            if mot in mot_to_index:
+                v[mot_to_index[mot]] = 1
+
+        res.append(v)
+
+    return np.array(res)
+
+#######################################################################################
+
+
+
+#######################################################################################
+
+
+
 
