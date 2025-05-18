@@ -12,6 +12,7 @@ Année: LU3IN026 - semestre 2 - 2024-2025, Sorbonne Université
 # import externe
 import numpy as np
 import pandas as pd
+import copy
 
 # ------------------------ 
 def crossval(X, Y, n_iterations, iteration):
@@ -57,25 +58,20 @@ def analyse_perfs(L):
     
 ##############################################################################
 
-import copy  # pour deepcopy()
-
 def validation_croisee(C, DS, nb_iter):
     """ Classifieur * tuple[array, array] * int -> tuple[ list[float], float, float]
     """
-    
     perf = []
-
+    print("------ affichage validation croisée")
     for i in range(nb_iter):
-        perceptron = copy.deepcopy(C)
+        classifieur = copy.deepcopy(C)
         Xapp,Yapp,Xtest,Ytest = crossval_strat(DS[0], DS[1], nb_iter, i)
-        perceptron.train(Xapp,Yapp)
-        accuracy=perceptron.accuracy(Xtest,Ytest)
-        perf.append(accuracy)
-        
-        print(f"Taux de bonne classification moyen sur {nb_iter} itérations : {np.mean(perf):.4f}%") 
-    moyenne, ecart_type = analyse_perfs(perf)
-
-    return perf,moyenne,ecart_type
+        classifieur.train(Xapp, Yapp)
+        perf.append(classifieur.accuracy(Xtest, Ytest))
+        print("Itération ",i," : taille base app.= ",Xapp.shape[0]," taille base test= ",Xtest.shape[0]," Taux de bonne classif: ",classifieur.accuracy(Xtest, Ytest))
+    print("------ fin affichage validation croisée")
+    moy,std = analyse_perfs(perf)
+    return (perf,moy,std)
     
 ##############################################################################
 
