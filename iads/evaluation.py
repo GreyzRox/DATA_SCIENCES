@@ -75,5 +75,19 @@ def validation_croisee(C, DS, nb_iter):
     
 ##############################################################################
 
+# validation_croisee sans print:
+def validation_croisee_sans_print(C, DS, nb_iter):
+    """ Classifieur * tuple[array, array] * int -> tuple[ list[float], float, float]
+    """
+    perf = []
+    for i in range(nb_iter):
+        classifieur = copy.deepcopy(C)
+        Xapp,Yapp,Xtest,Ytest = crossval_strat(DS[0], DS[1], nb_iter, i)
+        classifieur.train(Xapp, Yapp)
+        perf.append(classifieur.accuracy(Xtest, Ytest))
+    moy,std = analyse_perfs(perf)
+    return (perf,moy,std)
+
+##############################################################################
 # ------------------------ 
 

@@ -14,6 +14,7 @@ Année: LU3IN026 - semestre 2 - 2024-2025, Sorbonne Université
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from iads import Classifiers as classif
 
 # ------------------------ 
 
@@ -110,4 +111,79 @@ def create_XOR(n, var):
         y[i * n:(i + 1) * n] = class_assignments[i]
     
     return X, y
+
+#######################################################################################
+
+def discretise(m_desc, m_class, num_col):
+    """ input:
+            - m_desc : (np.array) matrice des descriptions toutes numériques
+            - m_class : (np.array) matrice des classes (correspondant à m_desc)
+            - num_col : (int) numéro de colonne de m_desc à considérer
+            - nb_classes : (int) nombre initial de labels dans le dataset (défaut: 2)
+        output: tuple : ((seuil_trouve, entropie), (liste_coupures,liste_entropies))
+            -> seuil_trouve (float): meilleur seuil trouvé
+            -> entropie (float): entropie du seuil trouvé (celle qui minimise)
+            -> liste_coupures (List[float]): la liste des valeurs seuils qui ont été regardées
+            -> liste_entropies (List[float]): la liste des entropies correspondantes aux seuils regardés
+            (les 2 listes correspondent et sont donc de même taille)
+            REMARQUE: dans le cas où il y a moins de 2 valeurs d'attribut dans m_desc, aucune discrétisation
+            n'est possible, on rend donc ((None , +Inf), ([],[])) dans ce cas            
+    """
+    # Liste triée des valeurs différentes présentes dans m_desc:
+    l_valeurs = np.unique(m_desc[:,num_col])
+    
+    # Si on a moins de 2 valeurs, pas la peine de discrétiser:
+    if (len(l_valeurs) < 2):
+        return ((None, float('Inf')), ([],[]))
+    
+    # Initialisation
+    best_seuil = None
+    best_entropie = float('Inf')
+    
+    # pour voir ce qui se passe, on va sauver les entropies trouvées et les points de coupures:
+    liste_entropies = []
+    liste_coupures = []
+    
+    nb_exemples = len(m_class)
+    
+    for v in l_valeurs:
+        cl_inf = m_class[m_desc[:,num_col]<=v]
+        cl_sup = m_class[m_desc[:,num_col]>v]
+        nb_inf = len(cl_inf)
+        nb_sup = len(cl_sup)
+        
+        # calcul de l'entropie de la coupure
+        val_entropie_inf = classif.entropie(cl_inf) # entropie de l'ensemble des inf
+        val_entropie_sup = classif.entropie(cl_sup) # entropie de l'ensemble des sup
+        
+        val_entropie = (nb_inf / float(nb_exemples)) * val_entropie_inf \
+                       + (nb_sup / float(nb_exemples)) * val_entropie_sup
+        
+        # Ajout de la valeur trouvée pour retourner l'ensemble des entropies trouvées:
+        liste_coupures.append(v)
+        liste_entropies.append(val_entropie)
+        
+        # si cette coupure minimise l'entropie, on mémorise ce seuil et son entropie:
+        if (best_entropie > val_entropie):
+            best_entropie = val_entropie
+            best_seuil = v
+    
+    return (best_seuil, best_entropie), (liste_coupures,liste_entropies)
+
+#######################################################################################
+
+def partitionne(m_desc,m_class,n,s):
+    """ input:
+            - m_desc : (np.array) matrice des descriptions toutes numériques
+            - m_class : (np.array) matrice des classes (correspondant à m_desc)
+            - n : (int) numéro de colonne de m_desc
+            - s : (float) seuil pour le critère d'arrêt
+        Hypothèse: m_desc peut être partitionné ! (il contient au moins 2 valeurs différentes)
+        output: un tuple composé de 2 tuples
+    """
+    return ((m_desc[m_desc[:,n]<=s], m_class[m_desc[:,n]<=s]), \
+            (m_desc[m_desc[:,n]>s], m_class[m_desc[:,n]>s]))
+
+#######################################################################################
+
 
