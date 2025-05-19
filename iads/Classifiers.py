@@ -312,7 +312,8 @@ class ClassifierMultiOAA(Classifier):
             desc_set: ndarray avec des descriptions
             label_set: ndarray avec les labels correspondants
             Hypothèse: desc_set et label_set ont le même nombre de lignes
-        """        
+        """
+        self.classifieurs = []
         self.classes = np.unique(label_set)
         nCl = len(self.classes)
 
