@@ -15,6 +15,7 @@ import pandas as pd
 from iads import utils as ut
 import copy
 import graphviz as gv
+from collections import Counter
 
 from abc import ABC, abstractmethod
 
@@ -738,12 +739,12 @@ def construit_AD_num(X,Y,epsilon,LNoms = []):
         Xbest_seuil = None
         
         for i in range(nb_col):
-            seuil = discretise(X,Y,i)[0][0]
+            seuil = ut.discretise(X,Y,i)[0][0]
             
             if seuil == None:
                 ((left_data,left_class), (right_data,right_class)) = ((X,Y),([],[]))
             else:
-                ((left_data,left_class), (right_data,right_class)) = partitionne(X,Y, i, seuil)
+                ((left_data,left_class), (right_data,right_class)) = ut.partitionne(X,Y, i, seuil)
             
             p_left = len(left_class) / len(Y)
             p_right = len(right_class) / len(Y)
