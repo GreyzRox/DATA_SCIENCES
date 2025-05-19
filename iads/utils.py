@@ -220,6 +220,87 @@ def df2array(df,index_mots):
 
 #######################################################################################
 
+def df2array_comptage(df,index_mots):
+    mot_to_index = {mot: i for i, mot in enumerate(index_mots)}
+    res = []
+
+    for mots in df["les_mots"]:
+        v = np.zeros(len(index_mots), dtype = int)
+        for mot in mots:
+            if mot in mot_to_index:
+                v[mot_to_index[mot]] += 1
+
+        res.append(v)
+
+    return np.array(res)
+
+#######################################################################################
+
+def df2array_freq(df,index_mots):
+    mot_to_index = {mot: i for i, mot in enumerate(index_mots)}
+    res = []
+
+    for mots in df["les_mots"]:
+        v = np.zeros(len(index_mots), dtype=float)
+        compteur = {}
+
+        # Comptage des occurrences
+        for mot in mots:
+            if mot in mot_to_index:
+                compteur[mot] = compteur.get(mot, 0) + 1
+
+        total = sum(compteur.values())  # Total de mots connus dans l'exemple
+
+        for mot, count in compteur.items():
+            v[mot_to_index[mot]] = count / total  # Fréquence relative
+
+        res.append(v)
+
+    return np.array(res)
+
+#######################################################################################
+
+def df2array_tfidf(df, index_mots):
+    mot_to_index = {mot: i for i, mot in enumerate(index_mots)}
+    N = len(df)
+
+    # 1. Calculer les df (document frequency) pour chaque mot
+    df_counts = np.zeros(len(index_mots))
+    for mots in df["les_mots"]:
+        mots_uniques = set(mots)
+        for mot in mots_uniques:
+            if mot in mot_to_index:
+                df_counts[mot_to_index[mot]] += 1
+
+    # 2. Calculer les idf
+    idf = np.log(N / (1 + df_counts))
+
+    # 3. Construction des vecteurs TF-IDF
+    res = []
+    for mots in df["les_mots"]:
+        v = np.zeros(len(index_mots), dtype=float)
+        compteur = {}
+
+        for mot in mots:
+            if mot in mot_to_index:
+                compteur[mot] = compteur.get(mot, 0) + 1
+
+        total = sum(compteur.values())  # total de mots dans le document
+        for mot, count in compteur.items():
+            idx = mot_to_index[mot]
+            tf = count / total
+            v[idx] = tf * idf[idx]
+
+        res.append(v)
+
+    return np.array(res)
+
+#######################################################################################
+
+
+
+#######################################################################################
+
 
 
 #######################################################################################
