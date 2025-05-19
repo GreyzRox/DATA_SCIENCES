@@ -120,6 +120,62 @@ class ClassifierKNN(Classifier):
 
 #######################################################################################
 
+class ClassifierKNNCos(Classifier):
+    """ Classe pour représenter un classifieur par K plus proches voisins.
+        Cette classe hérite de la classe Classifier
+    """
+    
+    def __init__(self, input_dimension, k):
+        """ Constructeur de Classifier
+            Argument:
+                - intput_dimension (int) : dimension d'entrée des exemples
+                - k (int) : nombre de voisins à considérer
+            Hypothèse : input_dimension > 0
+        """
+        Classifier.__init__(self,input_dimension)
+        self.k = k
+        self.data = None
+        self.label = None
+
+    def train(self, desc_set, label_set):
+        """ Permet d'entrainer le modele sur l'ensemble donné
+            desc_set: ndarray avec des descriptions
+            label_set: ndarray avec les labels correspondants
+            Hypothèse: desc_set et label_set ont le même nombre de lignes
+        """        
+        norms = np.linalg.norm(desc_set, axis=1, keepdims=True)
+        norms[norms == 0] = 1  # éviter division par zéro
+        self.data = desc_set / norms
+        self.label = label_set
+  
+    def score(self,x):
+        """ rend la proportion de +1 parmi les k ppv de x (valeur réelle)
+            x: une description : un ndarray
+        """
+        # Normalise x
+        x_norm = x / np.linalg.norm(x) if np.linalg.norm(x) != 0 else x
+        
+        # Calcule les similarités cosinus : produit scalaire avec vecteurs déjà normalisés
+        similarities = np.dot(self.data, x_norm)
+        
+        # Prend les k plus grandes similarités
+        top_k_indices = np.argsort(similarities)[-self.k:]
+        klabel = self.label[top_k_indices]
+        p = (klabel==1).sum()/self.k
+        return 2*(p-0.5)
+        
+    def predict(self, x):
+        """ rend la prediction sur x (-1 ou +1)
+            x: une description : un ndarray
+        """
+        score = self.score(x)
+        if score > 0 :
+            return 1
+        else :
+            return -1
+
+#######################################################################################
+
 class ClassifierLineaireRandom(Classifier):
     """ Classe pour représenter un classifieur linéaire aléatoire
         Cette classe hérite de la classe Classifier
